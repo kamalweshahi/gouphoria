@@ -1,0 +1,17 @@
+.orders-page, .orders-heading, .orders-list { display: grid; gap: 22px; }
+.orders-heading { max-width: 850px; }
+.order-card, .orders-empty { border: 1px solid var(--border); border-radius: var(--radius); background: rgba(255,255,255,.86); padding: 24px; box-shadow: 0 16px 40px rgba(18,20,17,.08); display: grid; gap: 16px; }
+.order-card-heading, .order-meta { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.order-card-heading strong { color: var(--text-h); font-size: 1.4rem; }
+.order-meta span { border-radius: 999px; background: var(--accent-soft); color: var(--text-h); padding: 7px 11px; font-weight: 700; text-transform: capitalize; }
+.order-card ul { margin: 0; padding-left: 20px; }
+.order-item-summary { display: grid; gap: 10px; }
+.order-item-summary li { padding-left: 4px; }
+.order-item-summary li span, .order-item-summary li small { display: block; }
+.order-item-summary li small { color: var(--muted); margin-top: 2px; }
+.order-details-link { width: fit-content; font-weight: 900; color: var(--accent-strong); }
+@media (max-width: 520px) {
+    .order-card { padding: 18px; }
+    .order-card-heading { align-items: start; }
+    .order-meta { gap: 7px; }
+}

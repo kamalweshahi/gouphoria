@@ -1,0 +1,23 @@
+.site-header{position:sticky;top:0;z-index:40;border-bottom:1px solid transparent;background:rgba(248,246,241,.92);backdrop-filter:blur(18px)}
+.header-inner{width:min(1400px,calc(100% - 64px));min-height:86px;margin:auto;display:grid;grid-template-columns:minmax(230px,1fr) auto minmax(170px,1fr);align-items:center;gap:24px}
+.brand{font:400 clamp(1.9rem,3vw,2.7rem)/1 var(--serif);letter-spacing:-.055em;text-decoration:none;color:var(--text-h)}
+.site-header nav{display:flex;align-items:center;gap:clamp(14px,2vw,28px)}
+.site-header nav>a{position:relative;color:var(--text-h);font-size:.69rem;font-weight:650;letter-spacing:.07em;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+.site-header nav>a::after{content:'';position:absolute;left:0;right:100%;bottom:-9px;height:1px;background:#111;transition:right 180ms ease}
+.site-header nav>a:hover::after,.site-header nav>a.active::after{right:0}
+.header-actions{justify-self:end;display:flex;align-items:center;gap:20px}
+.header-actions a,.account-trigger{position:relative;display:grid;place-items:center;width:30px;height:38px;color:#111}
+.account-trigger{padding:0;border:0;background:transparent;cursor:pointer}
+.header-actions svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.header-actions span{position:absolute;top:0;right:-7px;min-width:18px;height:18px;padding:0 5px;border-radius:50%;display:grid;place-items:center;color:#fff;background:#111;font-size:.6rem}
+.account-menu{position:relative}
+.account-popover{position:absolute;z-index:60;top:calc(100% + 12px);right:-44px;width:230px;padding:10px;border:1px solid var(--border);border-radius:16px;background:var(--panel);box-shadow:0 18px 50px rgba(18,20,17,.16);display:grid}
+.account-summary{padding:10px 11px 13px;border-bottom:1px solid var(--border);display:grid;gap:2px}
+.account-summary strong{font-size:.84rem}.account-summary small{color:var(--muted);font-size:.68rem;text-transform:capitalize}
+.account-popover>a,.account-popover>button{width:100%;padding:10px 11px;border:0;border-radius:9px;background:transparent;color:#111;text-align:left;text-decoration:none;font:600 .72rem/1.2 var(--sans);letter-spacing:.04em;text-transform:uppercase}
+.account-popover>a:hover,.account-popover>button:hover{background:var(--panel-soft)}
+.account-popover>button{margin-top:4px;border-top:1px solid var(--border);border-radius:0;color:#8a2f29;cursor:pointer}
+.logout-action{padding:8px 0;border:0;border-bottom:1px solid #111;background:transparent;color:#111;font:650 .65rem/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.menu-toggle,.mobile-account-links{display:none}
+@media(max-width:1050px){.header-inner{width:min(100% - 32px,1400px);min-height:72px;grid-template-columns:1fr auto auto}.menu-toggle{display:grid;place-items:center;border:0;background:transparent;color:#111;font-size:1.4rem;padding:0}.site-header nav{display:none;position:absolute;top:72px;left:0;right:0;max-height:calc(100vh - 72px);overflow:auto;padding:22px 24px 30px;background:var(--panel);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm)}.site-header nav.nav-open{display:grid;gap:0}.site-header nav>a{font-size:.82rem;padding:13px 0;border-bottom:1px solid var(--border)}.site-header nav>a::after{display:none}.mobile-account-links{display:grid;margin-top:12px}.mobile-account-links a,.mobile-account-links button{padding:12px 0;text-decoration:none;border:0;background:none;text-align:left;color:var(--muted)}.account-menu,.logout-action{display:none}.header-actions{gap:10px}.header-actions>a:first-child{display:none}}
+@media(max-width:480px){.header-inner{width:min(100% - 20px,1400px)}.brand{font-size:1.85rem}.header-actions{gap:4px}}

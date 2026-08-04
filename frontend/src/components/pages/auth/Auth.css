@@ -1,0 +1,50 @@
+.auth-page {
+    min-height: 66svh;
+    display: grid;
+    place-items: center;
+}
+
+.auth-card {
+    width: min(100%, 620px);
+    display: grid;
+    gap: 18px;
+    padding: clamp(24px, 6vw, 54px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: var(--shadow);
+}
+
+.auth-card h1 { font-size: clamp(2.4rem, 7vw, 4.5rem); }
+
+.auth-card form { display: grid; gap: 10px; margin-top: 6px; }
+.auth-card label { color: var(--text-h); font-weight: 800; margin-top: 6px; }
+
+.auth-card input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: white;
+    color: var(--text-h);
+    padding: 13px 15px;
+    outline: none;
+}
+
+.auth-card input:focus { border-color: var(--accent-strong); box-shadow: 0 0 0 3px rgba(17,17,15,.1); }
+.auth-card input[aria-invalid="true"] { border-color: var(--danger); }
+.field-error { color: var(--danger); font-size: 0.9rem; font-weight: 700; }
+.field-help { color: var(--muted); font-size: 0.86rem; }
+
+.auth-submit {
+    border: 0;
+    border-radius: 999px;
+    background: var(--accent);
+    color: white;
+    padding: 14px 20px;
+    font-weight: 900;
+    margin-top: 10px;
+}
+
+.auth-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+.auth-switch { text-align: center; }
+.auth-switch a { color: var(--text-h); font-weight: 900; }

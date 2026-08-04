@@ -1,0 +1,23 @@
+.policy-page { display: grid; gap: 24px; max-width: 1040px; margin: 0 auto; }
+.policy-hero { padding: clamp(28px, 6vw, 64px); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--panel); display: grid; gap: 18px; }
+.policy-hero h1 { font-size: clamp(2.2rem, 6vw, 4.7rem); }
+.policy-hero p { max-width: 800px; font-size: 1.06rem; }
+.policy-sections { display: grid; gap: 14px; }
+.policy-sections section, .faq-list details, .support-form, .support-details, .policy-help { padding: clamp(20px, 4vw, 30px); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--panel); }
+.policy-sections h2, .support-details h2 { font-size: clamp(1.35rem, 3vw, 2rem); margin-bottom: 12px; }
+.policy-sections section div { display: grid; gap: 12px; }
+.policy-sections a, .policy-help a, .support-details a { color: var(--accent-strong); font-weight: 800; }
+.policy-help { display: flex; justify-content: space-between; gap: 18px; align-items: center; }
+.faq-list { display: grid; gap: 10px; }
+.faq-list details { padding: 0; overflow: hidden; }
+.faq-list summary { padding: 20px 24px; cursor: pointer; color: var(--text-h); font-weight: 850; }
+.faq-list details p { padding: 0 24px 22px; }
+.support-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(270px, .7fr); gap: 18px; align-items: start; }
+.support-form { display: grid; gap: 16px; }
+.support-form label { display: grid; gap: 7px; color: var(--text-h); font-weight: 800; }
+.support-form label span { color: var(--muted); font-weight: 500; }
+.support-form input, .support-form select, .support-form textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: white; }
+.support-form .primary-button { width: fit-content; }
+.support-details { display: grid; gap: 18px; }
+.support-details ul { margin: 0; padding-left: 20px; }
+@media (max-width: 720px) { .support-layout { grid-template-columns: 1fr; } .policy-help { align-items: start; flex-direction: column; } }

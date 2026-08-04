@@ -1,0 +1,3 @@
+.empty-state { display: grid; justify-items: start; gap: 12px; padding: clamp(26px, 6vw, 52px); border: 1px dashed var(--border-strong); border-radius: var(--radius); background: var(--panel-soft); }
+.empty-state > span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: var(--accent-soft); color: var(--accent); font-size: 1.25rem; }
+.empty-state p { max-width: 620px; }

@@ -1,0 +1,5 @@
+.status-badge { display: inline-flex; width: fit-content; align-items: center; gap: 7px; padding: 7px 11px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel-soft); color: var(--text-h); font-size: .8rem; font-weight: 800; white-space: nowrap; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.status-success { color: var(--success); background: var(--success-soft); border-color: var(--success-border); }
+.status-warning { color: var(--warning); background: var(--warning-soft); border-color: var(--warning-border); }
+.status-danger { color: var(--danger); background: var(--danger-soft); border-color: var(--danger-border); }

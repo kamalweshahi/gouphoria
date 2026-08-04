@@ -1,0 +1,29 @@
+.profile-page { display: grid; gap: 26px; }
+.profile-heading { display: grid; gap: 14px; max-width: 850px; }
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.profile-grid article {
+    display: grid;
+    align-content: start;
+    gap: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 16px 40px rgba(18, 20, 17, 0.08);
+    padding: clamp(22px, 5vw, 38px);
+}
+
+.profile-grid dl { display: grid; gap: 12px; margin: 0; }
+.profile-grid dl div { display: grid; grid-template-columns: 100px 1fr; gap: 12px; }
+.profile-grid dt { color: var(--muted); }
+.profile-grid dd { margin: 0; color: var(--text-h); font-weight: 800; overflow-wrap: anywhere; }
+.profile-grid strong { color: var(--text-h); font-size: 2rem; }
+
+@media (max-width: 720px) {
+    .profile-grid { grid-template-columns: 1fr; }
+}

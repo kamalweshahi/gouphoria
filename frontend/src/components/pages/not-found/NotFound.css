@@ -1,0 +1,5 @@
+.not-found-page { min-height: 60svh; padding: clamp(30px,7vw,80px); display: grid; align-content: center; justify-items: start; gap: 20px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--panel); }
+.not-found-page h1, .not-found-page p { max-width: 780px; }
+.not-found-page p { font-size: 1.1rem; }
+.not-found-page > div { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 480px) { .not-found-page > div, .not-found-page a { width: 100%; } }

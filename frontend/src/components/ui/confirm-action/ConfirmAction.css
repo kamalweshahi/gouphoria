@@ -1,0 +1,9 @@
+.confirm-action { position: fixed; inset: 0; z-index: 100; padding: 20px; background: rgba(18,17,15,.62); backdrop-filter: blur(4px); display: grid; place-items: center; }
+.confirm-card { width: min(480px,100%); padding: 28px; border-radius: var(--radius-lg); background: var(--panel); box-shadow: 0 28px 80px rgba(0,0,0,.28); display: grid; gap: 14px; }
+.confirm-card h2 { font-size: 1.5rem; }
+.confirm-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; color: var(--warning); background: var(--warning-soft); font-weight: 900; }
+.confirm-card > div { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.confirm-card button { padding: 11px 17px; border-radius: 3px; font-weight: 800; }
+.confirm-cancel { border: 1px solid var(--border); color: var(--text-h); background: var(--panel); }
+.confirm-primary { border: 1px solid var(--accent); color: white; background: var(--accent); }
+.confirm-danger { border: 1px solid var(--danger); color: white; background: var(--danger); }

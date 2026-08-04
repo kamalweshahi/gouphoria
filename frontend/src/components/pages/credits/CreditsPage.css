@@ -1,0 +1,26 @@
+.credits-page { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 64px 0 100px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+.credits-page > *, .credit-packages > * { min-width: 0; }
+.credits-heading { display: flex; justify-content: space-between; gap: 28px; align-items: end; }
+.credits-heading h1 { font-size: clamp(2.4rem, 6vw, 4.8rem); margin: 7px 0 12px; color: var(--text-h); }
+.credits-heading p { max-width: 680px; color: var(--muted); }
+.credits-balance { min-width: 170px; padding: 20px; border-radius: var(--radius); background: var(--accent); color: white; display: grid; }
+.credits-balance strong { font-size: 3rem; line-height: 1; margin: 8px 0; }
+.credit-packages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.credit-packages article, .credit-checkout-panel, .credit-history-panel { border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow); padding: 26px; }
+.credit-packages article { display: grid; gap: 12px; }
+.credit-packages article.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.credit-packages strong { font-size: 1.7rem; color: var(--text-h); }
+.credit-packages p { font-size: 1.3rem; margin: 0; }
+.credit-packages button { border: 0; border-radius: 999px; padding: 12px 16px; background: var(--accent); color: white; font-weight: 800; cursor: pointer; }
+.credit-checkout-panel { display: grid; grid-template-columns: 1fr minmax(280px, 430px); gap: 30px; align-items: start; }
+.credit-checkout-panel h2, .credit-history-panel h2 { color: var(--text-h); margin: 4px 0 8px; }
+.credit-history-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 18px; }
+.credit-table-wrap { overflow-x: auto; }
+.credit-table { width: 100%; border-collapse: collapse; }
+.credit-table th, .credit-table td { padding: 13px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+.credit-positive { color: #1d6a37; font-weight: 800; }
+.credit-negative { color: var(--danger); font-weight: 800; }
+.purchase-status { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: var(--accent-soft); text-transform: capitalize; font-size: .82rem; font-weight: 800; }
+.purchase-status.status-captured { background: #dff4df; color: #1d5e27; }
+.purchase-status.status-failed, .purchase-status.status-cancelled { background: #fee4e2; color: #8e2119; }
+@media (max-width: 760px) { .credits-heading { align-items: stretch; flex-direction: column; } .credits-balance { width: auto; } .credit-packages, .credit-checkout-panel { grid-template-columns: 1fr; } }

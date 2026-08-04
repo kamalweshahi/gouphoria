@@ -1,0 +1,13 @@
+.about-page { display: grid; gap: 24px; }
+.about-intro { min-height: 430px; padding: clamp(32px,7vw,78px); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--panel); display: grid; align-content: center; justify-items: start; gap: 20px; }
+.about-intro h1, .about-intro p { max-width: 820px; }
+.about-intro p { font-size: 1.12rem; }
+.about-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+.about-grid article { padding: 28px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--panel); }
+.about-grid b { display: block; color: var(--accent); margin-bottom: 30px; }
+.about-grid h2 { font-size: 1.3rem; }
+.about-grid p { margin-top: 8px; }
+.about-note { padding: clamp(28px,6vw,60px); border-radius: var(--radius-xl); background: #171731; display: grid; grid-template-columns: 1fr 1fr; gap: 36px; color: white; }
+.about-note h2, .about-note .eyebrow { color: white; }
+.about-note p { color: #d5d5ed; font-size: 1.04rem; align-self: end; }
+@media (max-width: 700px) { .about-grid, .about-note { grid-template-columns: 1fr; } }

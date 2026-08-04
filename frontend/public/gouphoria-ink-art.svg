@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1800" role="img" aria-label="Monochrome mountain landscape artwork">
+  <rect width="900" height="1800" fill="#f3f0e9"/>
+  <g fill="none" stroke="#24231f" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-80 760 180 420l105 150L430 270l120 205 92-112 330 420" stroke-width="32" opacity=".9"/>
+    <path d="m-90 835 260-280 115 126 145-230 122 177 90-106 345 325" stroke-width="12" opacity=".4"/>
+    <path d="M-40 930c185-90 270-48 410-5 154 47 274-80 570-8" stroke-width="18" opacity=".64"/>
+    <path d="M-20 1000c178-55 305-28 430 10 170 52 294-62 520-25M-40 1062c205-42 330-16 455 21 168 49 285-42 520-8" stroke-width="9" opacity=".32"/>
+    <path d="M145 920v438m-95-18 95-218 95 218m-148-88 53-166 54 166m-6-210 80-142 76 142m-43 88 50-145 51 145M670 890v470m-104-16 104-245 104 245m-162-91 58-182 62 182m-7-247 76-151 83 151" stroke-width="15" opacity=".75"/>
+    <path d="M0 1390c240-80 350-20 490 20 145 42 252-35 430-10" stroke-width="22" opacity=".8"/>
+  </g>
+  <g fill="#24231f" opacity=".08"><path d="M-30 790 180 430l105 150L430 280l122 206 90-111 290 400-160 105-218-180-128 166-170-126-150 144Z"/><path d="M0 1380c215-94 363-25 485 21 148 55 275-38 415-6v405H0Z"/></g>
+  <text x="450" y="1625" text-anchor="middle" fill="#24231f" font-family="Georgia,serif" font-size="52" letter-spacing="5">GOUPHORIA</text>
+</svg>
