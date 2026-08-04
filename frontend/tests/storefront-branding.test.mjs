@@ -94,6 +94,23 @@ test('premium header exposes the approved navigation and mobile controls', async
     assert.match(header, /user\?\.role === 'admin'.*<NavLink to="\/admin">Admin<\/NavLink>/s)
 })
 
+test('customer request IDs use a browser-compatible UUID fallback', async () => {
+    const [createId, auth, checkout, createAI, designDetails] = await Promise.all([
+        readFile(new URL('../src/utils/create-id.ts', import.meta.url), 'utf8'),
+        readFile(new URL('../src/context/AuthProvider.tsx', import.meta.url), 'utf8'),
+        readFile(new URL('../src/components/credits/credit-paypal-checkout/CreditPayPalCheckout.tsx', import.meta.url), 'utf8'),
+        readFile(new URL('../src/components/pages/ai/CreateAI.tsx', import.meta.url), 'utf8'),
+        readFile(new URL('../src/components/pages/ai/DesignDetails.tsx', import.meta.url), 'utf8')
+    ])
+    assert.match(createId, /typeof crypto !== 'undefined'/)
+    assert.match(createId, /typeof crypto\.randomUUID === 'function'/)
+    assert.match(createId, /Date\.now\(\).*Math\.random\(\)/s)
+    for (const consumer of [auth, checkout, createAI, designDetails]) {
+        assert.match(consumer, /createId\(\)/)
+        assert.doesNotMatch(consumer, /crypto\.randomUUID\(\)/)
+    }
+})
+
 test('My Designs cards remain inside the responsive grid', async () => {
     const css = await readFile(new URL('../src/components/pages/ai/AI.css', import.meta.url), 'utf8')
     assert.match(css, /\.design-grid\s*\{[^}]*min-width:\s*0/)

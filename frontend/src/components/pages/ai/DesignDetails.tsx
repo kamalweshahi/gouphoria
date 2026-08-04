@@ -18,6 +18,7 @@ import './AI.css'
 import LoadingState from '../../ui/loading-state/LoadingState'
 import StatusBadge from '../../ui/status-badge/StatusBadge'
 import { statusLabel } from '../../../utils/status-presentation'
+import { createId } from '../../../utils/create-id'
 
 export default function DesignDetails() {
     const { designId } = useParams()
@@ -56,7 +57,7 @@ export default function DesignDetails() {
         if (!design) return
         setWorking(true); setError('')
         try {
-            const result = await generateAIDesign(design.id, crypto.randomUUID())
+            const result = await generateAIDesign(design.id, createId())
             setDesign(result.design)
             await refreshUser()
         } catch (error) {
@@ -68,7 +69,7 @@ export default function DesignDetails() {
         if (!design) return
         setWorking(true); setError('')
         try {
-            const result = await reviseAIDesign(design.id, revision, crypto.randomUUID())
+            const result = await reviseAIDesign(design.id, revision, createId())
             setDesign(result.design)
             setRevision('')
             await refreshUser()

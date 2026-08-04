@@ -15,6 +15,7 @@ import {
 import useAuth from '../../../hooks/useAuth'
 import LoadingState from '../../ui/loading-state/LoadingState'
 import StatusBadge from '../../ui/status-badge/StatusBadge'
+import { createId } from '../../../utils/create-id'
 import './AI.css'
 
 function unique(values: string[]) {
@@ -108,7 +109,7 @@ export default function CreateAI() {
             next = await uploadAIDesignImages(next.id, files)
             setDesign(next)
             setProgress('Generating printable artwork. This may take a minute...')
-            const result = await generateAIDesign(next.id, crypto.randomUUID())
+            const result = await generateAIDesign(next.id, createId())
             setDesign(result.design)
             await refreshUser()
             setProgress('Artwork ready for review.')
@@ -126,7 +127,7 @@ export default function CreateAI() {
         setError('')
         setProgress('Retrying the initial artwork...')
         try {
-            const result = await generateAIDesign(design.id, crypto.randomUUID())
+            const result = await generateAIDesign(design.id, createId())
             setDesign(result.design)
             await refreshUser()
             setProgress('Artwork ready for review.')
@@ -144,7 +145,7 @@ export default function CreateAI() {
         setError('')
         setProgress('Applying your one included revision...')
         try {
-            const result = await reviseAIDesign(design.id, revision, crypto.randomUUID())
+            const result = await reviseAIDesign(design.id, revision, createId())
             setDesign(result.design)
             setRevision('')
             await refreshUser()

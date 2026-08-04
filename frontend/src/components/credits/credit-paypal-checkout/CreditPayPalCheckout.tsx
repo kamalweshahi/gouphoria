@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CreditPackage } from '../../../models/Credits'
 import { cancelCreditPurchase, captureCreditPurchase, createCreditPurchase, creditErrorMessage } from '../../../services/credits'
 import { getPayPalClientId } from '../../../services/products'
+import { createId } from '../../../utils/create-id'
 import '../../store/paypal-checkout/PayPalCheckout.css'
 
 interface PayPalButtons {
@@ -50,14 +51,14 @@ async function loadPayPalSdk(clientId: string) {
 
 export default function CreditPayPalCheckout({ selectedPackage, onComplete }: Props) {
     const containerRef = useRef<HTMLDivElement>(null)
-    const requestKeyRef = useRef(crypto.randomUUID())
+    const requestKeyRef = useRef(createId())
     const purchaseIdRef = useRef<number | undefined>(undefined)
     const [loading, setLoading] = useState(true)
     const [message, setMessage] = useState('')
     const [error, setError] = useState('')
 
     useEffect(() => {
-        requestKeyRef.current = crypto.randomUUID()
+        requestKeyRef.current = createId()
         purchaseIdRef.current = undefined
         let cancelled = false
         if (containerRef.current) containerRef.current.replaceChildren()
@@ -81,13 +82,13 @@ export default function CreditPayPalCheckout({ selectedPackage, onComplete }: Pr
                         if (!purchaseIdRef.current) throw new Error('Credit purchase is missing.')
                         const result = await captureCreditPurchase(purchaseIdRef.current, data.orderID)
                         setMessage(`${result.purchase.credits} credits added. Your balance is now ${result.balance}.`)
-                        requestKeyRef.current = crypto.randomUUID()
+                        requestKeyRef.current = createId()
                         await onComplete()
                     },
                     onCancel: async data => {
                         if (purchaseIdRef.current) await cancelCreditPurchase(purchaseIdRef.current, data.orderID)
                         setMessage('Payment cancelled. No credits were added.')
-                        requestKeyRef.current = crypto.randomUUID()
+                        requestKeyRef.current = createId()
                     },
                     onError: payPalError => {
                         void payPalError

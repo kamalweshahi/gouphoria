@@ -11,6 +11,7 @@ import {
 } from '../services/auth'
 import { AuthContext } from './auth-context'
 import { SESSION_INVALID_EVENT } from '../services/session-aware-client'
+import { createId } from '../utils/create-id'
 
 type AuthEventType = 'login' | 'logout' | 'account-changed'
 
@@ -20,7 +21,7 @@ export default function AuthProvider({ children }: PropsWithChildren) {
     const [restorationError, setRestorationError] = useState<string | null>(null)
     const [sessionVersion, setSessionVersion] = useState(0)
     const restorationStarted = useRef(false)
-    const tabId = useRef(crypto.randomUUID())
+    const tabId = useRef(createId())
 
     const applyUser = useCallback((nextUser: AuthUser | null) => {
         setUser(previous => {
