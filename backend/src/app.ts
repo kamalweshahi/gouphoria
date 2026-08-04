@@ -16,6 +16,7 @@ import aiRouter from './routers/ai'
 import adminRouter from './routers/admin'
 import creditsRouter from './routers/credits'
 import webhooksRouter from './routers/webhooks'
+import seoRouter from './routers/seo'
 import { backfillRealisticMockupPreviews } from './services/mockup-backfill'
 
 loadEnvFile();
@@ -67,6 +68,7 @@ loadEnvFile();
     app.use('/', cookieParser())
 
     app.get('/health', (request, response) => response.json({ status: 'ok', app: name }))
+    app.use('/', seoRouter)
     app.use('/auth', authRouter)
     app.use('/products', productsRouter)
     app.use('/cart', cartRouter)

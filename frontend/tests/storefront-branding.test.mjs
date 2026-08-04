@@ -38,19 +38,28 @@ test('public metadata and favicon use Gouphoria editorial branding', async () =>
     assert.doesNotMatch(favicon, /linearGradient|#5b5ce2|#9a62ed|>S<\/text>/i)
 })
 
+test('nginx exposes dynamic sitemap and robots files through the public origin', async () => {
+    const nginx = await readFile(new URL('../nginx.conf', import.meta.url), 'utf8')
+    assert.match(nginx, /location = \/sitemap\.xml\s*\{[^}]*proxy_pass http:\/\/backend:3000\/sitemap\.xml;/s)
+    assert.match(nginx, /location = \/robots\.txt\s*\{[^}]*proxy_pass http:\/\/backend:3000\/robots\.txt;/s)
+})
+
 test('About, support, and public policy copy contain no old brand or launch placeholders', async () => {
-    const [about, policies, config] = await Promise.all([
+    const [about, policies, config, footer] = await Promise.all([
         readFile(new URL('../src/components/pages/about/About.tsx', import.meta.url), 'utf8'),
         readFile(new URL('../src/components/pages/policies/PolicyPages.tsx', import.meta.url), 'utf8'),
-        readFile(new URL('../src/config/store.ts', import.meta.url), 'utf8')
+        readFile(new URL('../src/config/store.ts', import.meta.url), 'utf8'),
+        readFile(new URL('../src/components/layout/footer/Footer.tsx', import.meta.url), 'utf8')
     ])
     assert.match(about, /How Gouphoria works/)
     assert.match(about, /Gouphoria connects original design tools/)
     assert.match(policies, /Gouphoria Support —/)
     assert.match(policies, /GPH-1234/)
     assert.match(config, /VITE_SUPPORT_EMAIL/)
+    assert.match(config, /gouphoria@gmail\.com/)
     assert.match(config, /VITE_SUPPORT_RESPONSE_TIME/)
-    assert.doesNotMatch(`${about}\n${policies}\n${config}`, /How Store works|Store support|STORE-|support@example\.com|\[OWNER REVIEW|\bTODO\b|\bTBD\b/)
+    assert.match(footer, /mailto:\$\{supportEmail\}/)
+    assert.doesNotMatch(`${about}\n${policies}\n${config}\n${footer}`, /How Store works|Store support|STORE-|support@example\.com|\[OWNER REVIEW|\bTODO\b|\bTBD\b/)
 })
 
 test('admin uses neutral production wording and collapses exact integration diagnostics', async () => {
