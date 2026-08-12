@@ -78,6 +78,9 @@ export interface GeneratedArtworkInspection {
     width: number
     height: number
     aspectRatio: number
+    sourceWidth: number
+    sourceHeight: number
+    normalized: boolean
     minimumResolutionSatisfied: true
     aspectRatioSatisfied: true
     visibleBorderDetected: false
@@ -86,7 +89,7 @@ export interface GeneratedArtworkInspection {
     contentGuardrails: ['flat-artwork-only', 'no-phone-mockup', 'no-camera-cutout', 'central-safe-area']
 }
 
-export async function validateGeneratedPhoneCaseArtwork(bytes: Buffer): Promise<GeneratedArtworkInspection> {
+export async function normalizeGeneratedPhoneCaseArtwork(bytes: Buffer): Promise<{ bytes: Buffer; inspection: GeneratedArtworkInspection }> {
     if (!bytes.length) throw new HttpError(502, 'The image service returned an empty artwork file. No credit was used.')
 
     let metadata: Metadata
@@ -95,20 +98,30 @@ export async function validateGeneratedPhoneCaseArtwork(bytes: Buffer): Promise<
     } catch {
         throw new HttpError(502, 'The generated artwork was unreadable. No credit was used; please try again.')
     }
-    const width = metadata.width ?? 0
-    const height = metadata.height ?? 0
-    if (width < PHONE_CASE_ARTWORK_WIDTH || height < PHONE_CASE_ARTWORK_HEIGHT) {
-        throw new HttpError(502, `The generated artwork was below the required ${PHONE_CASE_ARTWORK_WIDTH} × ${PHONE_CASE_ARTWORK_HEIGHT} print resolution. No credit was used; please try again.`)
+    const sourceWidth = metadata.width ?? 0
+    const sourceHeight = metadata.height ?? 0
+    if (sourceWidth < 768 || sourceHeight < 1152) {
+        throw new HttpError(502, `The generated artwork was below the minimum safe print resolution. No credit was used; please try again.`)
     }
-    const aspectRatio = width / height
-    if (Math.abs(aspectRatio - PHONE_CASE_ARTWORK_ASPECT_RATIO) > 0.01) {
+    const sourceAspectRatio = sourceWidth / sourceHeight
+    if (Math.abs(sourceAspectRatio - PHONE_CASE_ARTWORK_ASPECT_RATIO) > 0.075) {
         throw new HttpError(502, 'The generated artwork did not use the required vertical phone-case aspect ratio. No credit was used; please try again.')
+    }
+
+    let normalizedBytes: Buffer
+    try {
+        normalizedBytes = await sharp(bytes, { failOn: 'error' })
+            .rotate()
+            .resize(PHONE_CASE_ARTWORK_WIDTH, PHONE_CASE_ARTWORK_HEIGHT, { fit: 'cover', position: 'centre' })
+            .png({ compressionLevel: 9 })
+            .toBuffer()
+    } catch {
+        throw new HttpError(502, 'The generated artwork could not be prepared safely for printing. No credit was used; please try again.')
     }
 
     const sampleWidth = 192
     const sampleHeight = 288
-    const { data, info } = await sharp(bytes, { failOn: 'error' })
-        .rotate()
+    const { data, info } = await sharp(normalizedBytes, { failOn: 'error' })
         .resize(sampleWidth, sampleHeight, { fit: 'fill' })
         .flatten({ background: '#ffffff' })
         .removeAlpha()
@@ -123,10 +136,13 @@ export async function validateGeneratedPhoneCaseArtwork(bytes: Buffer): Promise<
         throw new HttpError(502, 'The generated artwork contained a visible border or frame. No credit was used; please try again.')
     }
 
-    return {
-        width,
-        height,
-        aspectRatio,
+    const inspection: GeneratedArtworkInspection = {
+        width: PHONE_CASE_ARTWORK_WIDTH,
+        height: PHONE_CASE_ARTWORK_HEIGHT,
+        aspectRatio: PHONE_CASE_ARTWORK_ASPECT_RATIO,
+        sourceWidth,
+        sourceHeight,
+        normalized: sourceWidth !== PHONE_CASE_ARTWORK_WIDTH || sourceHeight !== PHONE_CASE_ARTWORK_HEIGHT || metadata.format !== 'png',
         minimumResolutionSatisfied: true,
         aspectRatioSatisfied: true,
         visibleBorderDetected: false,
@@ -134,4 +150,9 @@ export async function validateGeneratedPhoneCaseArtwork(bytes: Buffer): Promise<
         compositionVersion: PHONE_CASE_COMPOSITION_VERSION,
         contentGuardrails: ['flat-artwork-only', 'no-phone-mockup', 'no-camera-cutout', 'central-safe-area']
     }
+    return { bytes: normalizedBytes, inspection }
+}
+
+export async function validateGeneratedPhoneCaseArtwork(bytes: Buffer): Promise<GeneratedArtworkInspection> {
+    return (await normalizeGeneratedPhoneCaseArtwork(bytes)).inspection
 }

@@ -23,6 +23,11 @@ export default function MyDesigns() {
 
     if (loading) return <LoadingState label="Loading your designs" />
 
+    const orderedDesigns = [...designs].sort((left, right) => {
+        if (left.status === 'failed' && right.status !== 'failed') return 1
+        if (right.status === 'failed' && left.status !== 'failed') return -1
+        return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+    })
     const approvedDesigns = designs.filter(design => design.status === 'approved' || design.status === 'approved_for_print' || design.status === 'completed').length
 
     return (
@@ -39,7 +44,7 @@ export default function MyDesigns() {
             {error && <p className="error" role="alert">{error}</p>}
             {!designs.length && !error && <EmptyState title="No designs yet" message="Start with a supported phone case and one or two private reference images." action={{ label: 'Create with AI', to: '/create-ai' }} />}
             <div className="design-grid">
-                {designs.map(design => <article className="design-card" key={design.id}>
+                {orderedDesigns.map(design => <article className={`design-card${design.status === 'failed' ? ' design-card-recoverable' : ''}`} key={design.id}>
                     <div className="design-card-visual">
                         {design.artwork.mockupUrl
                             ? <img className="design-mockup" src={aiAssetUrl(design.artwork.mockupUrl)} alt={`${design.variant?.phoneModel ?? 'Phone'} case preview`} loading="lazy" decoding="async" />
@@ -49,10 +54,12 @@ export default function MyDesigns() {
                         {design.artwork.currentUrl && design.artwork.mockupUrl && <div className="design-artwork-inset"><img src={aiAssetUrl(design.artwork.currentUrl)} alt="Printable artwork thumbnail" loading="lazy" decoding="async" /><span>Artwork</span></div>}
                     </div>
                     <div className="design-card-body">
-                        <div className="design-card-topline"><span>Design #{design.id}</span><StatusBadge status={design.status} /></div>
+                        <div className="design-card-topline"><span>Design #{design.id}</span>{design.status === 'failed' ? <span className="design-retry-label">Ready to retry</span> : <StatusBadge status={design.status} />}</div>
                         <h2>{design.variant?.phoneModel ?? 'Phone case'}</h2>
                         <p className="design-case-type">{design.variant?.caseType || 'Custom case'}</p>
-                        <blockquote className="design-prompt">“{design.prompt}”</blockquote>
+                        {design.status === 'failed'
+                            ? <div className="design-friendly-failure"><strong>Generation couldn't be completed</strong><p>Your credit was not used. You haven't lost your work—open this design to try again.</p></div>
+                            : <p className="design-saved-note">Private custom artwork and preview</p>}
                         <dl className="design-meta">
                             <div><dt>Created</dt><dd>{new Date(design.createdAt).toLocaleDateString()}</dd></div>
                             <div><dt>Generations</dt><dd>{design.generationCount}</dd></div>
@@ -60,7 +67,7 @@ export default function MyDesigns() {
                             <div><dt>Revision</dt><dd>{design.revisionAvailable ? 'Available' : 'Used or locked'}</dd></div>
                         </dl>
                         {design.commerce[0]?.customerMessage && <p className="review-message">{design.commerce[0].customerMessage}</p>}
-                        <Link to={`/designs/${design.id}`}>Open design <span aria-hidden="true">→</span></Link>
+                        <Link to={`/designs/${design.id}`}>{design.status === 'failed' ? 'Try Again' : 'Open design'} <span aria-hidden="true">→</span></Link>
                     </div>
                 </article>)}
             </div>

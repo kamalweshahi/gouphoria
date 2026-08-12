@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type Product from '../../../models/Product'
 import './ProductCard.css'
+import './ProductCardPolish.css'
 
 interface ProductCardProps {
     product: Product
@@ -21,7 +22,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <article className="product-card">
             <div className="product-image-wrap">
                 {product.image ? <img src={product.image} alt={product.displayName || product.title} loading="lazy" decoding="async" /> : <div className="image-placeholder">Image unavailable</div>}
-                <div className="product-badges">{supportsAI && <span className="badge ai-badge">AI Custom</span>}</div>
+                <div className="product-badges">{supportsAI && <span className="badge ai-badge">Customizable</span>}</div>
             </div>
             <div className="product-info">
                 <p className="product-category">{product.storefrontCategory || 'Phone case'}</p>
@@ -35,7 +36,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     {aiOnly
                         ? <Link to={`/create-ai?productId=${encodeURIComponent(product.id)}`} className="view-product-button">Start designing</Link>
                         : <Link to={`/products/${product.id}`} className="view-product-button">View product</Link>}
-                    {!aiOnly && supportsAI && <Link to={`/create-ai?productId=${encodeURIComponent(product.id)}`} className="customize-product-link">Customize with AI</Link>}
+                    {!aiOnly && supportsAI && <Link to={`/create-ai?productId=${encodeURIComponent(product.id)}`} className="customize-product-link">Design your own</Link>}
                 </div>
             </div>
         </article>

@@ -68,11 +68,20 @@ test('print-ready artwork passes aspect, resolution, border, and declared conten
     assert.equal(inspection.contentGuardrails.includes('no-phone-mockup'), true)
 })
 
-test('artwork below print resolution is rejected', async () => {
+test('artwork below the minimum safe resolution is rejected', async () => {
     await assert.rejects(
         validateGeneratedPhoneCaseArtwork(await solidArtwork(512, 768)),
-        /below the required 1024 × 1536 print resolution/i
+        /below the minimum safe print resolution/i
     )
+})
+
+test('usable provider output with a small size difference is normalized to print dimensions', async () => {
+    const inspection = await validateGeneratedPhoneCaseArtwork(await solidArtwork(1000, 1500))
+    assert.equal(inspection.sourceWidth, 1000)
+    assert.equal(inspection.sourceHeight, 1500)
+    assert.equal(inspection.width, 1024)
+    assert.equal(inspection.height, 1536)
+    assert.equal(inspection.normalized, true)
 })
 
 test('artwork with the wrong phone-case aspect ratio is rejected', async () => {

@@ -111,7 +111,7 @@ before(async () => {
         (product.variants || []).map(item => [Number(item.id), { isStorefrontEnabled: item.isStorefrontEnabled }])
     )
     await product.update({
-        displayName: 'Integration Test Phone Case', isVisible: true, isActive: true,
+        displayName: 'Admin-managed Phone Case', isVisible: true, isActive: true,
         allowDirectPurchase: true, allowAiCustomization: false, aiCustomOnly: false
     })
     await variant.update({ isStorefrontEnabled: true })
@@ -284,7 +284,7 @@ test('admin customer, order, and independent product controls', async t => {
         assert.equal(await CommerceAudit.count({ where: { actorUserId: admin.user.id, action: 'product_settings_changed' } }) > 0, true)
         const aiProducts = await request('/products/ai-customizable', { cookie: customer.cookie })
         assert.equal(aiProducts.response.status, 200)
-        assert.ok(aiProducts.body.some(item => item.id === product.printifyProductId && item.title === 'Integration Test Phone Case'))
+        assert.ok(aiProducts.body.some(item => item.id === product.printifyProductId && item.title === 'Admin-managed Phone Case'))
 
         const direct = await request('/cart/items', {
             method: 'POST', cookie: customer.cookie,

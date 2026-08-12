@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const routes: Array<{ match: (path: string) => boolean; title: string; description: string; private?: boolean }> = [
-    { match: path => path === '/', title: 'Gouphoria — Custom AI Phone Cases', description: 'Create custom phone cases with AI, preview your design, choose your phone model, and order a case made for you.' },
+    { match: path => path === '/', title: 'Gouphoria — Premium Phone Cases', description: 'Shop premium phone cases for your model or design your own custom case with Gouphoria.' },
     { match: path => path.startsWith('/products/'), title: 'Case Details — Gouphoria', description: 'Choose a supported phone model and case type with current verified pricing.' },
     { match: path => path === '/products', title: 'Cases — Gouphoria', description: 'Explore Gouphoria phone cases and choose the exact fit for your device.' },
     { match: path => path === '/about', title: 'About Gouphoria', description: 'Learn how Gouphoria AI design, human review, secure payment, production, and delivery work together.' },

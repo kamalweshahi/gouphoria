@@ -115,7 +115,7 @@ export default function DesignDetails() {
             <Link to="/designs">← Back to My Designs</Link>
             <header className="ai-result-header">
                 <div><span className="eyebrow">Design #{design.id}</span><h1>{design.variant?.phoneModel} · {design.variant?.caseType}</h1><p>Created {new Date(design.createdAt).toLocaleString()}</p></div>
-                <StatusBadge status={design.status} />
+                {design.status === 'failed' ? <span className="design-retry-label">Ready to retry</span> : <StatusBadge status={design.status} />}
             </header>
 
             <div className="ai-preview-grid details-preview">
@@ -124,8 +124,10 @@ export default function DesignDetails() {
                 {design.artwork.mockupUrl && <figure><img src={aiAssetUrl(design.artwork.mockupUrl)} alt="Phone-case preview" decoding="async" /><figcaption>Preview only</figcaption></figure>}
             </div>
 
+            {design.status === 'failed' && <section className="friendly-generation-failure" role="status"><span className="eyebrow">Your work is saved</span><h2>We couldn't finish your design.</h2><p>You haven't lost your work, and no credit was used for this failed attempt. Try again with the same idea.</p><button className="ai-primary" disabled={working || (user?.credits.balance ?? 0) < 1} onClick={() => void retryInitial()}>Try Again</button></section>}
+
             <div className="design-details-grid">
-                <article><h2>Design brief</h2><h3>Original prompt</h3><p>{design.prompt}</p>{design.revisionPrompt && <><h3>Revision instructions</h3><p>{design.revisionPrompt}</p></>}</article>
+                <article><h2>Design brief</h2><p>Your original request is saved privately. Open the retry action above to continue without starting over.</p>{design.revisionPrompt && <><h3>Revision saved</h3><p>Your latest revision instructions are preserved.</p></>}</article>
                 <article><h2>Selected product</h2>{design.product?.available === false && <p className="error">This product is no longer available for a new purchase. Your saved design remains preserved.</p>}<dl className="design-meta"><div><dt>Product</dt><dd>{design.product?.title}</dd></div><div><dt>Variant</dt><dd>{design.variant?.title}</dd></div><div><dt>Phone</dt><dd>{design.variant?.phoneModel}</dd></div><div><dt>Case type</dt><dd>{design.variant?.caseType}</dd></div></dl></article>
                 <article><h2>Project usage</h2><dl className="design-meta"><div><dt>Credits used</dt><dd>{design.creditsUsed}</dd></div><div><dt>Generations</dt><dd>{design.generationCount}/2</dd></div><div><dt>Revision</dt><dd>{design.revisionAvailable ? 'Available' : 'Used or locked'}</dd></div><div><dt>Ownership</dt><dd>{design.ownershipConfirmed ? 'Confirmed' : 'Not confirmed'}</dd></div></dl></article>
             </div>
@@ -141,13 +143,13 @@ export default function DesignDetails() {
             </article>}
 
             <article className="reference-panel"><h2>Private reference images</h2><div className="reference-grid">{design.uploads.map(upload => <img key={upload.id} src={aiAssetUrl(upload.url)} alt="Uploaded reference" loading="lazy" decoding="async" />)}</div></article>
-            <article className="history-panel"><h2>Generation history</h2>{!design.generations.length ? <p>No completed generation yet.</p> : <ol>{design.generations.map(generation => <li key={generation.id}><strong>{generation.kind}</strong><StatusBadge status={generation.status} /><time>{new Date(generation.createdAt).toLocaleString()}</time>{generation.errorCode && <small>Reference: {generation.errorCode}</small>}</li>)}</ol>}</article>
+            <article className="history-panel"><h2>Generation history</h2>{!design.generations.length ? <p>No completed generation yet.</p> : <ol>{design.generations.map(generation => <li key={generation.id}><strong>{generation.kind}</strong>{generation.status === 'failed' ? <span className="design-retry-label">Couldn’t finish</span> : <StatusBadge status={generation.status} />}<time>{new Date(generation.createdAt).toLocaleString()}</time></li>)}</ol>}</article>
             {!!design.commerce.length && <article className="history-panel"><h2>Order and review status</h2><ol>{design.commerce.map(entry => <li key={entry.orderItemId}><strong>{entry.orderNumber ? `Order ${entry.orderNumber}` : 'Saved in cart'}</strong><StatusBadge status={entry.reviewStatus} />{entry.paymentStatus && <small>Payment: {statusLabel(entry.paymentStatus)}</small>}{entry.customerMessage && <p><strong>Admin feedback:</strong> {entry.customerMessage}</p>}{entry.orderId && <Link to={`/orders/${entry.orderId}`}>Open order</Link>}</li>)}</ol></article>}
 
             {error && <p className="error" role="alert">{error}</p>}
             {(user?.credits.balance ?? 0) === 0 && <p className="credit-empty">No AI credits remain. <Link to="/credits">Buy credits to generate or revise artwork</Link>.</p>}
             <div className="ai-actions detail-actions">
-                {design.generationCount === 0 && <button className="ai-primary" disabled={working || (user?.credits.balance ?? 0) < 1} onClick={() => void retryInitial()}>Retry initial generation · 1 credit</button>}
+                {design.generationCount === 0 && design.status !== 'failed' && <button className="ai-primary" disabled={working || (user?.credits.balance ?? 0) < 1} onClick={() => void retryInitial()}>Try Again · 1 credit if successful</button>}
                 {design.artwork.currentUrl && ['waiting_for_user', 'generated'].includes(design.status) && <button className="ai-primary" disabled={working} onClick={() => void approve()}>Approve this design</button>}
                 {design.status === 'approved' && <button className="ai-primary" disabled={working} onClick={() => void addToCart()}>Add customized case to cart</button>}
                 {design.status === 'added_to_cart' && <Link className="ai-primary link-button" to="/cart">View customized case in cart</Link>}

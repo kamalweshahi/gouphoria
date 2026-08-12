@@ -17,7 +17,7 @@ export default function aiUpload(request: Request, response: Response, next: Nex
     uploader(request, response, error => {
         if (!error) return next()
         if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
-            return next(new HttpError(413, `Each image must be ${process.env.AI_UPLOAD_MAX_MB ?? 8} MB or smaller.`))
+            return next(new HttpError(413, `Each image must be ${process.env.AI_UPLOAD_MAX_MB ?? 25} MB or smaller.`))
         }
         if (error instanceof multer.MulterError && ['LIMIT_FILE_COUNT', 'LIMIT_UNEXPECTED_FILE'].includes(error.code)) {
             return next(new HttpError(422, `You may upload up to ${MAX_AI_UPLOADS} reference images per design.`))

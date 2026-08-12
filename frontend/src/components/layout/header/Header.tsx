@@ -16,6 +16,8 @@ export default function Header() {
     const [menuOpen, setMenuOpen] = useState(false)
     const [accountOpen, setAccountOpen] = useState(false)
     const accountMenu = useRef<HTMLDivElement>(null)
+    const mobileMenu = useRef<HTMLElement>(null)
+    const menuButton = useRef<HTMLButtonElement>(null)
     const close = () => { setMenuOpen(false); setAccountOpen(false) }
 
     useEffect(() => {
@@ -34,6 +36,32 @@ export default function Header() {
         }
     }, [accountOpen])
 
+    useEffect(() => {
+        if (!menuOpen) return
+        const previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        const closeWithKeyboard = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setMenuOpen(false)
+                menuButton.current?.focus()
+                return
+            }
+            if (event.key !== 'Tab' || !mobileMenu.current) return
+            const controls = [...mobileMenu.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')]
+            if (!controls.length) return
+            const first = controls[0]
+            const last = controls[controls.length - 1]
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+            if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+        }
+        document.addEventListener('keydown', closeWithKeyboard)
+        requestAnimationFrame(() => mobileMenu.current?.querySelector<HTMLElement>('a[href], button')?.focus())
+        return () => {
+            document.body.style.overflow = previousOverflow
+            document.removeEventListener('keydown', closeWithKeyboard)
+        }
+    }, [menuOpen])
+
     async function signOut() {
         close()
         await logout()
@@ -42,9 +70,11 @@ export default function Header() {
     return <header className="site-header">
         <div className="header-inner">
             <Link to="/" className="brand" aria-label="Gouphoria home">Gouphoria</Link>
-            <button className="menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen(value => !value)}><span aria-hidden="true">{menuOpen ? '×' : '☰'}</span><span className="visually-hidden">{menuOpen ? 'Close menu' : 'Open menu'}</span></button>
-            <nav id="primary-navigation" className={menuOpen ? 'nav-open' : ''} aria-label="Primary navigation" onClick={event => { if ((event.target as HTMLElement).closest('a')) close() }}>
-                <NavLink to="/" end>Home page</NavLink><NavLink to="/products">Cases</NavLink><NavLink to="/create-ai">Create with AI</NavLink><NavLink to="/designs">My Designs</NavLink><NavLink to="/about">About</NavLink>{user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
+            <button ref={menuButton} className="menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen(value => !value)}><span aria-hidden="true">{menuOpen ? '×' : '☰'}</span><span className="visually-hidden">{menuOpen ? 'Close menu' : 'Open menu'}</span></button>
+            {menuOpen && <button className="nav-backdrop" type="button" aria-label="Close navigation menu" onClick={close} />}
+            <nav ref={mobileMenu} id="primary-navigation" className={menuOpen ? 'nav-open' : ''} aria-label="Primary navigation" onClick={event => { if ((event.target as HTMLElement).closest('a')) close() }}>
+                <div className="mobile-drawer-heading"><span>Menu</span><button type="button" aria-label="Close navigation menu" onClick={close}>×</button></div>
+                <NavLink to="/products">Shop</NavLink><NavLink to="/create-ai">Create with AI</NavLink><NavLink to="/#best-sellers">Featured Cases</NavLink>{user && <NavLink to="/orders">My Orders</NavLink>}<NavLink to={user ? '/profile' : '/login'}>Account</NavLink>{user?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
                 <div className="mobile-account-links">{!loading && !user && <><NavLink to="/login">Log in</NavLink><NavLink to="/register">Register</NavLink></>}{user && <><NavLink to="/profile">Profile</NavLink><NavLink to="/orders">My Orders</NavLink><NavLink to="/credits">AI Credits</NavLink><button type="button" onClick={() => void signOut()}>Log out</button></>}</div>
             </nav>
             <div className="header-actions">

@@ -18,10 +18,6 @@ export interface AIGeneration {
     id: number
     kind: 'initial' | 'revision'
     status: 'processing' | 'succeeded' | 'failed'
-    prompt: string
-    provider?: string
-    model?: string
-    errorCode?: string
     artworkUrl?: string
     mockupPreviewUrl?: string
     mockupTemplateId?: string
@@ -85,10 +81,7 @@ export default interface AIDesign {
     creditsUsed: number
     generationCount: number
     revisionAvailable: boolean
-    provider?: string
-    model?: string
     generatedAt?: string
-    errorCode?: string
     mockupPreviewUrl?: string
     mockupPreviewStatus?: MockupPreviewStatus
     mockupTemplateId?: string

@@ -42,6 +42,7 @@ export default function CreateAI() {
     const [loadingCatalog, setLoadingCatalog] = useState(true)
     const [working, setWorking] = useState(false)
     const [progress, setProgress] = useState('')
+    const [elapsedSeconds, setElapsedSeconds] = useState(0)
     const [error, setError] = useState('')
 
     useEffect(() => {
@@ -57,6 +58,13 @@ export default function CreateAI() {
             .catch(error => setError(aiErrorMessage(error, 'Could not load supported phone cases.')))
             .finally(() => setLoadingCatalog(false))
     }, [requestedProductId])
+
+    useEffect(() => {
+        if (!working) return
+        const startedAt = Date.now()
+        const timer = window.setInterval(() => setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000)), 1000)
+        return () => window.clearInterval(timer)
+    }, [working])
 
     const selectedProduct = products.find(product => product.id === productId)
     const usableVariants = useMemo(
@@ -99,6 +107,7 @@ export default function CreateAI() {
             setError('Choose a valid phone case and one or two reference images.')
             return
         }
+        setElapsedSeconds(0)
         setWorking(true)
         setError('')
         try {
@@ -108,7 +117,7 @@ export default function CreateAI() {
             setProgress('Uploading and validating your private reference images...')
             next = await uploadAIDesignImages(next.id, files)
             setDesign(next)
-            setProgress('Generating printable artwork. This may take a minute...')
+            setProgress('Creating your printable artwork. Your saved project remains available while this finishes...')
             const result = await generateAIDesign(next.id, createId())
             setDesign(result.design)
             await refreshUser()
@@ -123,6 +132,7 @@ export default function CreateAI() {
 
     async function retryInitial() {
         if (!design) return
+        setElapsedSeconds(0)
         setWorking(true)
         setError('')
         setProgress('Retrying the initial artwork...')
@@ -141,6 +151,7 @@ export default function CreateAI() {
 
     async function requestRevision() {
         if (!design) return
+        setElapsedSeconds(0)
         setWorking(true)
         setError('')
         setProgress('Applying your one included revision...')
@@ -177,8 +188,8 @@ export default function CreateAI() {
     return (
         <section className="ai-page">
             <header className="ai-heading">
-                <span className="eyebrow">AI phone-case studio</span>
-                <h1>Create Your Phone Case with AI</h1>
+                <span className="eyebrow">Powered by AI</span>
+                <h1>Design Your Own Case</h1>
                 <p>Choose an available case option, add private visual references, and create printable artwork with one included revision.</p>
                 <div className="credit-pill">{user?.credits.balance ?? 0} AI credits available</div>
                 {(user?.credits.balance ?? 0) === 0 && <p className="credit-empty">You are out of AI credits. <Link to="/credits">Buy credits to continue</Link>.</p>}
@@ -187,7 +198,7 @@ export default function CreateAI() {
             {!design?.artwork.currentUrl && (
                 <form className="ai-builder" onSubmit={submit} noValidate>
                     <div className="ai-step"><strong>1</strong><span>Choose your phone case</span></div>
-                    {!products.length ? <p className="state-message">No phone cases are currently enabled for AI customization.</p> : <div className="ai-product-picker" role="radiogroup" aria-label="AI-customizable phone case">{products.map(product => <button key={product.id} type="button" role="radio" aria-checked={product.id === productId} className={product.id === productId ? 'selected' : ''} onClick={() => changeProduct(product.id)}>{product.image ? <img src={product.image} alt="" loading="lazy" /> : <span className="ai-product-placeholder">Phone case</span>}<span><b>{product.displayName || product.title}</b><small>From {new Intl.NumberFormat('en-US', { style: 'currency', currency: product.currency }).format(product.price ?? 0)}</small><small>{product.phoneModels.slice(0, 3).join(' · ')}{product.phoneModels.length > 3 ? ` +${product.phoneModels.length - 3}` : ''}</small></span><em>AI Custom</em></button>)}</div>}
+                    {!products.length ? <p className="state-message">No phone cases are currently enabled for customization.</p> : <div className="ai-product-picker" role="radiogroup" aria-label="Customizable phone case">{products.map(product => <button key={product.id} type="button" role="radio" aria-checked={product.id === productId} className={product.id === productId ? 'selected' : ''} onClick={() => changeProduct(product.id)}>{product.image ? <img src={product.image} alt="" loading="lazy" /> : <span className="ai-product-placeholder">Phone case</span>}<span><b>{product.displayName || product.title}</b><small>From {new Intl.NumberFormat('en-US', { style: 'currency', currency: product.currency }).format(product.price ?? 0)}</small><small>{product.phoneModels.slice(0, 3).join(' · ')}{product.phoneModels.length > 3 ? ` +${product.phoneModels.length - 3}` : ''}</small></span><em>Customizable</em></button>)}</div>}
                     {selectedProduct && <p className="ai-catalog-note"><strong>{phoneModels.length} phone models available.</strong> Choose the exact model so its matching shell and camera frame are used in your preview.</p>}
                     <div className="ai-field-grid">
                         <div>
@@ -208,10 +219,10 @@ export default function CreateAI() {
 
                     <div className="ai-step"><strong>2</strong><span>Add one or two reference images</span></div>
                     <label className="upload-zone" htmlFor="ai-images">
-                        <span>{files.length ? `${files.length} image${files.length === 1 ? '' : 's'} selected` : 'Choose PNG, JPG, JPEG, or WEBP images'}</span>
-                        <small>Private · maximum two files · up to 8 MB each</small>
+                        <span>{files.length ? `${files.length} image${files.length === 1 ? '' : 's'} selected` : 'Choose photos from your phone'}</span>
+                        <small>PNG, JPG, WebP, HEIC or HEIF · maximum two files · up to 25 MB each · resized automatically</small>
                     </label>
-                    <input id="ai-images" className="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp" multiple onChange={event => chooseFiles(event.target.files)} required />
+                    <input id="ai-images" className="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/heif,.png,.jpg,.jpeg,.webp,.heic,.heif" multiple onChange={event => chooseFiles(event.target.files)} required />
                     {files.length > 0 && <ul className="file-list">{files.map(file => <li key={`${file.name}-${file.size}`}>{file.name}</li>)}</ul>}
 
                     <div className="ai-step"><strong>3</strong><span>Describe your artwork</span></div>
@@ -224,9 +235,9 @@ export default function CreateAI() {
                         <span>I confirm that I own the rights to upload and use these images.</span>
                     </label>
 
-                    <div className="ai-cost-note"><strong>Initial generation:</strong> 1 AI credit. Your project stays saved if generation fails.</div>
+                    <div className="ai-cost-note"><strong>Initial generation:</strong> 1 AI credit is charged only after your artwork and preview are prepared successfully.</div>
                     {error && <p className="error" role="alert">{error}</p>}
-                    {progress && <p className="ai-progress" aria-live="polite">{progress}</p>}
+                    {progress && <div className="ai-progress" aria-live="polite"><span className={working ? 'ai-progress-spinner' : ''} aria-hidden="true" /><div><strong>{progress}</strong>{working && <small>{elapsedSeconds < 20 ? 'Preparing your private references…' : elapsedSeconds < 80 ? 'Creating your artwork…' : 'Still working safely—complex artwork can take a little longer.'} {elapsedSeconds}s</small>}</div></div>}
                     <button className="ai-primary" type="submit" disabled={working || !selectedVariant || files.length < 1 || !ownershipConfirmed || prompt.trim().length < 12 || (user?.credits.balance ?? 0) < 1}>
                         {working ? 'Creating your artwork...' : 'Generate initial artwork · 1 credit'}
                     </button>

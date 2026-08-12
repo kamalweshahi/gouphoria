@@ -250,7 +250,7 @@ test('AI design generation, private uploads, credits, idempotency, and ownership
         assert.equal(mismatch.response.status, 422)
         assert.match(mismatch.body.message, /does not match/i)
 
-        const oversized = Buffer.alloc(8 * 1024 * 1024 + 1)
+        const oversized = Buffer.alloc(25 * 1024 * 1024 + 1)
         png.copy(oversized, 0, 0, Math.min(png.length, oversized.length))
         const tooLarge = await request(`/ai/designs/${apiDesign.id}/uploads`, {
             method: 'POST', cookie: owner.cookie,
@@ -449,7 +449,7 @@ test('AI design generation, private uploads, credits, idempotency, and ownership
         await addAIDesignUploads(outsider.user.id, project.id, [uploadFile(png)], memory)
         await assert.rejects(
             generateInitialArtwork(outsider.user.id, project.id, `failure_${randomUUID()}`, new FakeProvider(png, { failGenerate: true }), memory),
-            /no credit was used/i
+            /work is saved.*try again/i
         )
         assert.equal((await CreditAccount.findOne({ where: { userId: outsider.user.id } })).balance, 2)
         assert.equal(await CreditTransaction.count({ where: { aiDesignId: project.id } }), 0)
@@ -471,7 +471,7 @@ test('AI design generation, private uploads, credits, idempotency, and ownership
         }).png().toBuffer()
         await assert.rejects(
             generateInitialArtwork(outsider.user.id, invalidOutputProject.id, `invalid-output_${randomUUID()}`, new FakeProvider(undersizedArtwork), memory),
-            /below the required 1024 × 1536 print resolution.*No credit was used/i
+            /below the minimum safe print resolution.*No credit was used/i
         )
         assert.equal((await CreditAccount.findOne({ where: { userId: outsider.user.id } })).balance, 1)
         assert.equal(await CreditTransaction.count({ where: { aiDesignId: invalidOutputProject.id } }), 0)
@@ -485,9 +485,42 @@ test('AI design generation, private uploads, credits, idempotency, and ownership
         await addAIDesignUploads(outsider.user.id, moderationProject.id, [uploadFile(png)], memory)
         await assert.rejects(
             generateInitialArtwork(outsider.user.id, moderationProject.id, `moderation_${randomUUID()}`, new FakeProvider(png, { flagged: true }), memory),
-            /cannot be generated/i
+            /could not create this design/i
         )
         assert.equal((await CreditAccount.findOne({ where: { userId: outsider.user.id } })).balance, 1)
+    })
+
+    await t.test('slow provider work does not hold the design row transaction open', async () => {
+        const memory = new MemoryStorage()
+        const project = await createAIDesign(outsider.user.id, {
+            productId: product.printifyProductId,
+            variantId: variant.printifyVariantId,
+            prompt: 'A slow-provider transaction-boundary test with soft blue geometric art',
+            ownershipConfirmed: true
+        })
+        await addAIDesignUploads(outsider.user.id, project.id, [uploadFile(png)], memory)
+        let releaseProvider
+        let providerStarted
+        const started = new Promise(resolve => { providerStarted = resolve })
+        const released = new Promise(resolve => { releaseProvider = resolve })
+        const slowProvider = new FakeProvider(png)
+        slowProvider.generate = async function (prompt) {
+            this.generatePrompt = prompt
+            this.generateCalls += 1
+            providerStarted()
+            await released
+            return { bytes: this.bytes, provider: 'deterministic', model: 'phase6-test', requestId: 'slow-provider' }
+        }
+        const running = generateInitialArtwork(outsider.user.id, project.id, `slow_${randomUUID()}`, slowProvider, memory)
+        await started
+        const updatedAt = new Date()
+        const startedAt = Date.now()
+        await AIDesign.update({ updatedAt }, { where: { id: project.id } })
+        assert.ok(Date.now() - startedAt < 1000, 'database update should not wait for external generation')
+        releaseProvider()
+        const completed = await running
+        assert.equal(completed.design.generationCount, 1)
+        assert.equal(completed.design.creditsUsed, 1)
     })
 
     await t.test('My Designs is owner scoped and status transitions reject backwards moves', async () => {

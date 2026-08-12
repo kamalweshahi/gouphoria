@@ -5,10 +5,12 @@ import HttpError from '../errors/http-error'
 
 export { createPhoneCaseMockup } from './mockup-templates'
 
-export const SUPPORTED_UPLOAD_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp'] as const
+export const SUPPORTED_UPLOAD_MIME_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif'] as const
+export const AI_REFERENCE_WIDTH = 1024
+export const AI_REFERENCE_HEIGHT = 1536
 
 export function maxUploadBytes() {
-    const megabytes = Number(process.env.AI_UPLOAD_MAX_MB ?? 8)
+    const megabytes = Number(process.env.AI_UPLOAD_MAX_MB ?? 25)
     if (!Number.isFinite(megabytes) || megabytes < 1 || megabytes > 25) {
         throw new Error('AI_UPLOAD_MAX_MB must be between 1 and 25')
     }
@@ -17,8 +19,8 @@ export function maxUploadBytes() {
 
 function uploadDimensionRules() {
     const minimum = Number(process.env.AI_UPLOAD_MIN_DIMENSION ?? 64)
-    const maximum = Number(process.env.AI_UPLOAD_MAX_DIMENSION ?? 12000)
-    const maxPixels = Number(process.env.AI_UPLOAD_MAX_PIXELS ?? 40000000)
+    const maximum = Number(process.env.AI_UPLOAD_MAX_DIMENSION ?? 16000)
+    const maxPixels = Number(process.env.AI_UPLOAD_MAX_PIXELS ?? 64000000)
     if (!Number.isInteger(minimum) || minimum < 1 || minimum > 2000) throw new Error('AI_UPLOAD_MIN_DIMENSION is invalid')
     if (!Number.isInteger(maximum) || maximum < minimum || maximum > 20000) throw new Error('AI_UPLOAD_MAX_DIMENSION is invalid')
     if (!Number.isInteger(maxPixels) || maxPixels < 1000000 || maxPixels > 100000000) throw new Error('AI_UPLOAD_MAX_PIXELS is invalid')
@@ -35,25 +37,34 @@ function detectedSignature(buffer: Buffer) {
     if (buffer.length >= 12 && buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP') {
         return { mimeType: 'image/webp', extension: 'webp' }
     }
+    if (buffer.length >= 12 && buffer.subarray(4, 8).toString('ascii') === 'ftyp') {
+        const brand = buffer.subarray(8, 12).toString('ascii').toLowerCase()
+        if (['heic', 'heix', 'hevc', 'hevx', 'mif1', 'msf1'].includes(brand)) {
+            return { mimeType: 'image/heic', extension: 'heic' }
+        }
+    }
     return undefined
 }
 
 function declaredExtension(filename: string) {
     const extension = extname(basename(filename)).toLowerCase().replace('.', '')
-    return extension === 'jpeg' ? 'jpg' : extension
+    if (extension === 'jpeg') return 'jpg'
+    if (extension === 'heif') return 'heic'
+    return extension
 }
 
 export async function validateUploadedImage(file: Express.Multer.File) {
     if (!file?.buffer?.length) throw new HttpError(422, 'Choose a valid image file.')
-    if (file.size > maxUploadBytes()) throw new HttpError(413, `Each image must be ${process.env.AI_UPLOAD_MAX_MB ?? 8} MB or smaller.`)
+    if (file.size > maxUploadBytes()) throw new HttpError(413, `Each image must be ${process.env.AI_UPLOAD_MAX_MB ?? 25} MB or smaller.`)
 
     const signature = detectedSignature(file.buffer)
-    if (!signature) throw new HttpError(422, 'Only valid PNG, JPG, JPEG, or WEBP images are supported.')
+    if (!signature) throw new HttpError(422, 'Only valid PNG, JPG, JPEG, WEBP, HEIC, or HEIF images are supported.')
     const extension = declaredExtension(file.originalname)
-    if (!['png', 'jpg', 'webp'].includes(extension)) {
-        throw new HttpError(422, 'The image filename must end in PNG, JPG, JPEG, or WEBP.')
+    if (!['png', 'jpg', 'webp', 'heic'].includes(extension)) {
+        throw new HttpError(422, 'The image filename must end in PNG, JPG, JPEG, WEBP, HEIC, or HEIF.')
     }
-    if (!SUPPORTED_UPLOAD_MIME_TYPES.includes(file.mimetype as any) || file.mimetype !== signature.mimeType || extension !== signature.extension) {
+    const declaredMime = file.mimetype === 'image/heif' ? 'image/heic' : file.mimetype
+    if (!SUPPORTED_UPLOAD_MIME_TYPES.includes(file.mimetype as any) || declaredMime !== signature.mimeType || extension !== signature.extension) {
         throw new HttpError(422, 'The image type does not match its filename or file contents.')
     }
 
@@ -74,12 +85,16 @@ export async function validateUploadedImage(file: Express.Multer.File) {
 
     let sanitizedBytes: Buffer
     try {
-        const image = sharp(file.buffer, { failOn: 'error', limitInputPixels: rules.maxPixels, sequentialRead: true }).rotate()
-        sanitizedBytes = signature.extension === 'jpg'
-            ? await image.jpeg({ quality: 95, mozjpeg: true }).toBuffer()
-            : signature.extension === 'webp'
-                ? await image.webp({ quality: 95 }).toBuffer()
-                : await image.png({ compressionLevel: 9 }).toBuffer()
+        sanitizedBytes = await sharp(file.buffer, { failOn: 'error', limitInputPixels: rules.maxPixels, sequentialRead: true })
+            .rotate()
+            .resize(AI_REFERENCE_WIDTH, AI_REFERENCE_HEIGHT, {
+                fit: 'contain',
+                position: 'centre',
+                background: { r: 244, g: 242, b: 237, alpha: 1 }
+            })
+            .flatten({ background: { r: 244, g: 242, b: 237 } })
+            .jpeg({ quality: 90, mozjpeg: true, chromaSubsampling: '4:4:4' })
+            .toBuffer()
     } catch {
         throw new HttpError(422, 'This image could not be processed safely.')
     }
@@ -88,11 +103,13 @@ export async function validateUploadedImage(file: Express.Multer.File) {
     }
 
     return {
-        mimeType: signature.mimeType,
-        extension: signature.extension,
+        mimeType: 'image/jpeg' as const,
+        extension: 'jpg' as const,
         checksumSha256: createHash('sha256').update(sanitizedBytes).digest('hex'),
-        width: metadata.width,
-        height: metadata.height,
+        width: AI_REFERENCE_WIDTH,
+        height: AI_REFERENCE_HEIGHT,
+        originalWidth: metadata.width,
+        originalHeight: metadata.height,
         sanitizedBytes
     }
 }

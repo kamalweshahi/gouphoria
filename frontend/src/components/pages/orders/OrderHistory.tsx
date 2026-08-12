@@ -34,7 +34,7 @@ export default function OrderHistory() {
                 <p>Paid orders remain safely stored even when product availability changes.</p>
             </div>
             {error && <p className="error" role="alert">{error}</p>}
-            {!orders.length && !error && <EmptyState title="No orders yet" message="Your completed and saved checkouts will appear here." action={{ label: 'Browse phone cases', to: '/products' }} />}
+            {!orders.length && !error && <EmptyState title="No orders yet" message="Explore our cases and find one made for you." action={{ label: 'Shop Cases', to: '/products' }} />}
             <div className="orders-list">
                 {orders.map(order => (
                     <article className="order-card" key={order.id}>

@@ -1,7 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const sharp = require('sharp')
-const { validateUploadedImage } = require('../dist/services/ai-images')
+const { AI_REFERENCE_HEIGHT, AI_REFERENCE_WIDTH, validateUploadedImage } = require('../dist/services/ai-images')
 const { LocalPrivateStorage } = require('../dist/services/ai-storage')
 
 function uploadFile(buffer, filename = 'reference.png', type = 'image/png') {
@@ -25,15 +25,30 @@ test('AI upload validation rejects spoofed, malformed, unsafe, and oversized ima
         }
     }).withMetadata({ density: 144 }).png().toBuffer()
 
-    await t.test('valid images are decoded and re-encoded without embedded metadata', async () => {
+    await t.test('portrait phone images are oriented, normalized, and stripped of metadata', async () => {
         const validated = await validateUploadedImage(uploadFile(png))
-        assert.equal(validated.mimeType, 'image/png')
-        assert.equal(validated.width, 256)
-        assert.equal(validated.height, 384)
+        assert.equal(validated.mimeType, 'image/jpeg')
+        assert.equal(validated.extension, 'jpg')
+        assert.equal(validated.originalWidth, 256)
+        assert.equal(validated.originalHeight, 384)
+        assert.equal(validated.width, AI_REFERENCE_WIDTH)
+        assert.equal(validated.height, AI_REFERENCE_HEIGHT)
         assert.match(validated.checksumSha256, /^[a-f0-9]{64}$/)
         const metadata = await sharp(validated.sanitizedBytes).metadata()
+        assert.equal(metadata.width, 1024)
+        assert.equal(metadata.height, 1536)
         assert.equal(metadata.exif, undefined)
         assert.equal(metadata.icc, undefined)
+    })
+
+    await t.test('large landscape phone photos are resized without stretching', async () => {
+        const landscape = await sharp({ create: { width: 4032, height: 3024, channels: 3, background: '#285a90' } }).jpeg().toBuffer()
+        const validated = await validateUploadedImage(uploadFile(landscape, 'camera.jpg', 'image/jpeg'))
+        assert.equal(validated.originalWidth, 4032)
+        assert.equal(validated.originalHeight, 3024)
+        assert.equal(validated.width, 1024)
+        assert.equal(validated.height, 1536)
+        assert.ok(validated.sanitizedBytes.length < landscape.length)
     })
 
     await t.test('filename, MIME type, and signature must agree', async () => {

@@ -257,6 +257,24 @@ function customerSafeText(value: string) {
         .trim()
 }
 
+// Integration and API smoke-test products can exist in the connected Printify
+// shop. Keep them available to administrators for deliberate cleanup, but never
+// present internal-looking records as customer merchandise.
+export function isCustomerFacingCatalogTitle(value: string) {
+    const title = value.replace(/\s+/g, ' ').trim()
+    if (!title) return false
+    return ![
+        /^api(?:\s|[-_])*(?:phase\s*\d+|cs(?:\s|[-_])*\d+)/i,
+        /^phase\s*\d+\s*(?:test|fixture|api)\b/i,
+        /^(?:integration|catalog|commerce)\s+test\b/i,
+        /^(?:test|fixture|smoke)(?:\s|[-_])+(?:product|phone case|case)\b/i
+    ].some(pattern => pattern.test(title))
+}
+
+function isCustomerFacingProduct(product: Product) {
+    return isCustomerFacingCatalogTitle(product.displayName?.trim() || product.title)
+}
+
 function fallbackShortDescription(description?: string) {
     if (!description?.trim()) return 'Printed phone case available in supported models.'
     const normalized = description.replace(/\s+/g, ' ').trim()
@@ -374,6 +392,7 @@ export async function listStorefrontProducts(options: { aiOnly?: boolean; refres
         order: [['sortOrder', 'ASC'], ['id', 'ASC']]
     })
     return products
+        .filter(isCustomerFacingProduct)
         .filter(product => !options.aiOnly || Boolean(
             product.blueprintId && /^\d+$/.test(product.blueprintId)
             && product.printProviderId && /^\d+$/.test(product.printProviderId)
@@ -403,7 +422,7 @@ export async function getStorefrontProduct(printifyProductId: string) {
         where: { printifyProductId, ...publicProductWhere() },
         include: [ProductVariant]
     })
-    if (!product) throw new HttpError(404, 'This phone case is not currently available.')
+    if (!product || !isCustomerFacingProduct(product)) throw new HttpError(404, 'This phone case is not currently available.')
     const serialized = serializeCatalogProduct(product)
     if (!serialized.variants.some(variant => variant.isEnabled && variant.available)) {
         throw new HttpError(404, 'This phone case has no available options.')

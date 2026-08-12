@@ -29,10 +29,10 @@ test('public metadata and favicon use Gouphoria editorial branding', async () =>
         readFile(new URL('../index.html', import.meta.url), 'utf8'),
         readFile(new URL('../public/favicon.svg', import.meta.url), 'utf8')
     ])
-    assert.match(html, /<title>Gouphoria — Custom AI Phone Cases<\/title>/)
+    assert.match(html, /<title>Gouphoria — Premium Phone Cases<\/title>/)
     assert.match(html, /property="og:site_name" content="Gouphoria"/)
-    assert.match(html, /name="twitter:title" content="Gouphoria — Custom AI Phone Cases"/)
-    assert.match(html, /Create custom phone cases with AI, preview your design, choose your phone model/)
+    assert.match(html, /name="twitter:title" content="Gouphoria — Premium Phone Cases"/)
+    assert.match(html, /Shop premium phone cases for your model or design your own custom case/)
     assert.doesNotMatch(html, /Printify|Store —|production partner|fulfillment provider/i)
     assert.match(favicon, />G<\/text>/)
     assert.doesNotMatch(favicon, /linearGradient|#5b5ce2|#9a62ed|>S<\/text>/i)
@@ -91,15 +91,23 @@ test('product removal wording matches permanent deletion, archival, and manageme
 })
 
 test('premium header exposes the approved navigation and mobile controls', async () => {
-    const header = await readFile(new URL('../src/components/layout/header/Header.tsx', import.meta.url), 'utf8')
-    for (const label of ['Gouphoria', 'Home page', 'Cases', 'Create with AI', 'My Designs', 'About']) assert.match(header, new RegExp(label))
-    assert.match(header, /to="\/" end>Home page/)
+    const [header, css] = await Promise.all([
+        readFile(new URL('../src/components/layout/header/Header.tsx', import.meta.url), 'utf8'),
+        readFile(new URL('../src/components/layout/header/Header.css', import.meta.url), 'utf8')
+    ])
+    for (const label of ['Gouphoria', 'Shop', 'Create with AI', 'Featured Cases', 'My Orders', 'Account']) assert.match(header, new RegExp(label))
+    assert.match(header, /to="\/products">Shop/)
     assert.match(header, /account-popover/)
     assert.match(header, /My Orders/)
     assert.match(header, /AI Credits/)
     assert.match(header, /Log out/)
     assert.match(header, /aria-expanded=/)
     assert.match(header, /aria-controls="primary-navigation"/)
+    assert.match(header, /className="nav-backdrop"/)
+    assert.match(header, /event\.key === 'Escape'/)
+    assert.match(header, /event\.key !== 'Tab'/)
+    assert.match(css, /transform:translateX\(-105%\)/)
+    assert.match(css, /height:100dvh/)
     assert.match(header, /user\?\.role === 'admin'.*<NavLink to="\/admin">Admin<\/NavLink>/s)
 })
 
@@ -182,29 +190,40 @@ test('case viewer supports reduced motion, keyboard use, and hidden-tab pausing'
     assert.match(css, /@media \(prefers-reduced-motion: reduce\)/)
 })
 
-test('homepage uses the approved case photography, process images, and line icons', async () => {
+test('homepage prioritizes real catalog shopping and keeps AI secondary', async () => {
     const home = await readFile(new URL('../src/components/pages/home/Home.tsx', import.meta.url), 'utf8')
-    for (const asset of [
-        'gouphoria-process-01.webp',
-        'gouphoria-process-02.webp',
-        'gouphoria-process-03.webp',
-        'gouphoria-process-04.webp'
-    ]) {
-        assert.match(home, new RegExp(asset.replaceAll('.', '\\.')))
-        await access(new URL(`../public/${asset}`, import.meta.url))
-    }
-    for (const kind of ['phone', 'sparkle', 'bag', 'shield', 'truck', 'lock', 'review', 'photo']) {
+    for (const kind of ['shield', 'truck', 'lock', 'review']) {
         assert.match(home, new RegExp(`'${kind}'`))
     }
-    assert.match(home, /Upload a photo reference/)
-    assert.match(home, /Option 1/)
-    assert.match(home, /Option 2/)
-    assert.match(home, /ProcessGalleryDialog/)
-    assert.match(home, /aria-pressed=/)
-    assert.match(home, /Previous/)
-    assert.match(home, /Next/)
-    assert.doesNotMatch(home, /Suggested styles/)
-    assert.doesNotMatch(home, /360|Premium Finish/i)
+    assert.match(home, /Phone cases<br \/>made for you/)
+    assert.match(home, /Shop our collection or create your own with AI/)
+    assert.match(home, /className="primary-button" to="\/products">Shop Cases/)
+    assert.match(home, /Featured Cases/)
+    assert.match(home, /getAllProducts/)
+    assert.match(home, /allowDirectPurchase !== false/)
+    assert.match(home, /Design Your Own Case/)
+    assert.match(home, /Powered by AI/)
+    assert.match(home, /gouphoria-phone-back-transparent\.png/)
+    assert.doesNotMatch(home, /AI-powered\. Uniquely yours|Design it\.|Make it yours\./i)
+})
+
+test('account prioritizes orders and failed designs never expose technical details', async () => {
+    const [profile, designs, details, model] = await Promise.all([
+        readFile(new URL('../src/components/pages/profile/Profile.tsx', import.meta.url), 'utf8'),
+        readFile(new URL('../src/components/pages/ai/MyDesigns.tsx', import.meta.url), 'utf8'),
+        readFile(new URL('../src/components/pages/ai/DesignDetails.tsx', import.meta.url), 'utf8'),
+        readFile(new URL('../src/models/AIDesign.ts', import.meta.url), 'utf8')
+    ])
+    assert.match(profile, /My Orders/)
+    assert.match(profile, /No orders yet/)
+    assert.match(profile, /Shop Cases/)
+    assert.match(profile, /getOrders/)
+    assert.match(designs, /Generation couldn't be completed/)
+    assert.match(designs, /Your credit was not used/)
+    assert.match(designs, /Try Again/)
+    assert.doesNotMatch(designs, /design\.errorCode|generation\.errorCode/)
+    assert.doesNotMatch(details, /generation\.errorCode|Reference:/)
+    assert.doesNotMatch(model, /errorCode\?:/)
 })
 
 test('premium photo viewer automatically sequences the transparent back, side, and phone screen views', async () => {
